@@ -186,17 +186,19 @@ private fun RemoteIcon(url: String, name: String, size: Dp, tint: Color?) {
 
 @Composable
 fun LetterTile(name: String, size: Dp, modifier: Modifier = Modifier) {
-    val accent = HomelabTheme.colors.accent
+    val c = HomelabTheme.colors
+    val accent = c.accent
+    val tileBg = c.tint(accent)
     Box(
         modifier
             .size(size)
             .clip(RoundedCornerShape(size * 0.25f))
-            .background(accent.copy(alpha = 0.18f)),
+            .background(tileBg),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = IconResolver.initial(name),
-            color = accent,
+            color = c.textOn(accent, tileBg),
             fontWeight = FontWeight.Bold,
             fontSize = (size.value * 0.45f).sp,
             style = MaterialTheme.typography.titleMedium,

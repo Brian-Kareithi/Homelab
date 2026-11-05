@@ -129,11 +129,12 @@ fun ShimmerStatRow(count: Int = 3, modifier: Modifier = Modifier) {
 /** Small coloured pill with a dot, e.g. Docker "running". */
 @Composable
 fun StatusPill(text: String, level: StatusLevel, modifier: Modifier = Modifier) {
-    val color = HomelabTheme.colors.status.of(level)
+    val c = HomelabTheme.colors
+    val color = c.status.of(level)
     Row(
         modifier
             .clip(RoundedCornerShape(50))
-            .background(color.copy(alpha = 0.13f))
+            .background(c.tint(color))
             .padding(horizontal = 9.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -148,7 +149,7 @@ fun StatusPill(text: String, level: StatusLevel, modifier: Modifier = Modifier) 
             text.lowercase(Locale.getDefault()),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold,
-            color = color,
+            color = c.textOn(color),
             maxLines = 1,
         )
     }
@@ -204,10 +205,10 @@ fun CountChip(text: String, modifier: Modifier = Modifier) {
         text,
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.SemiBold,
-        color = c.accent,
+        color = c.textOn(c.accent),
         modifier = modifier
             .clip(RoundedCornerShape(50))
-            .background(c.accentSoft)
+            .background(c.tint(c.accent))
             .padding(horizontal = 10.dp, vertical = 3.dp),
     )
 }
@@ -226,7 +227,8 @@ fun EmptyHint(text: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun ErrorLine(text: String, modifier: Modifier = Modifier) {
-    val red = HomelabTheme.colors.status.error
+    val c = HomelabTheme.colors
+    val red = c.textOn(c.status.error, c.card)
     Row(modifier, verticalAlignment = Alignment.CenterVertically) {
         Icon(Icons.Filled.ErrorOutline, contentDescription = null, tint = red, modifier = Modifier.size(14.dp))
         Spacer(Modifier.width(5.dp))

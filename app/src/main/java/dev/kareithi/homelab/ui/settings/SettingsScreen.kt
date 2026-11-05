@@ -60,6 +60,7 @@ import dev.kareithi.homelab.ui.components.NavAction
 import dev.kareithi.homelab.ui.components.SectionTitle
 import dev.kareithi.homelab.ui.components.SettingsCardSkeleton
 import dev.kareithi.homelab.ui.dashboard.DashboardViewModel
+import dev.kareithi.homelab.ui.theme.bestContentOn
 
 @Composable
 fun SettingsScreen(
@@ -236,11 +237,16 @@ private fun AccentPicker(current: Long, enabled: Boolean, onPick: (Long) -> Unit
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(if (enabled) color else color.copy(alpha = 0.35f))
-                    .border(2.dp, if (selected) MaterialTheme.colorScheme.onSurface else Color.Transparent, CircleShape)
+                    // Always outlined so dark swatches (e.g. Ink) stay visible on a black card.
+                    .border(
+                        if (selected) 2.dp else 1.dp,
+                        if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,
+                        CircleShape,
+                    )
                     .clickable(enabled = enabled) { onPick(argb) },
                 contentAlignment = Alignment.Center,
             ) {
-                if (selected) Icon(Icons.Filled.Check, contentDescription = "Selected", tint = Color.White, modifier = Modifier.size(18.dp))
+                if (selected) Icon(Icons.Filled.Check, contentDescription = "Selected", tint = bestContentOn(color), modifier = Modifier.size(18.dp))
             }
         }
     }

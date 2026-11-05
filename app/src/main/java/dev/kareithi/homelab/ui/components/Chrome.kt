@@ -60,13 +60,13 @@ fun ConnectionIndicator(kind: ConnectionKind?, modifier: Modifier = Modifier) {
     Row(
         modifier
             .clip(RoundedCornerShape(50))
-            .background(color.copy(alpha = 0.12f))
+            .background(c.tint(color))
             .padding(horizontal = 10.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Spacer(Modifier.size(8.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(6.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = color)
+        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = c.textOn(color))
     }
 }
 
@@ -74,21 +74,23 @@ fun ConnectionIndicator(kind: ConnectionKind?, modifier: Modifier = Modifier) {
 @Composable
 fun OfflineBanner(lastUpdated: Long?, message: String?, now: Long, modifier: Modifier = Modifier) {
     val c = HomelabTheme.colors
+    val bannerBg = c.tint(c.status.warn)
+    val bannerText = c.textOn(c.status.warn, bannerBg)
     Row(
         modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(c.status.warn.copy(alpha = 0.14f))
+            .background(bannerBg)
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.Filled.CloudOff, contentDescription = null, tint = c.status.warn, modifier = Modifier.size(18.dp))
+        Icon(Icons.Filled.CloudOff, contentDescription = null, tint = bannerText, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(10.dp))
         val updated = lastUpdated?.let { "Last updated ${Format.relative(it, maxOf(now, it))}" } ?: "No data yet"
         Text(
             listOfNotNull("Offline", updated, message).joinToString(" · "),
             style = MaterialTheme.typography.labelMedium,
-            color = c.status.warn,
+            color = bannerText,
             maxLines = 2,
         )
     }

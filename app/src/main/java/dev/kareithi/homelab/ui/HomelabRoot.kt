@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -104,7 +105,7 @@ fun HomelabRoot() {
         drawerState = drawerState,
         // Swipe-to-open only on top-level screens so it never fights the detail screen's back gesture.
         gesturesEnabled = onTopLevel || drawerState.isOpen,
-        scrimColor = Palette.Ink.copy(alpha = 0.45f),
+        scrimColor = if (HomelabTheme.colors.isDark) Color.Black.copy(alpha = 0.7f) else Palette.Ink.copy(alpha = 0.45f),
         drawerContent = {
             val state by dashboardVm.state.collectAsStateWithLifecycle()
             val settings by dashboardVm.settings.collectAsStateWithLifecycle()
@@ -175,10 +176,10 @@ private fun FloatingDrawer(
                 Modifier
                     .size(52.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Brush.linearGradient(listOf(c.accent, c.accent.copy(alpha = 0.7f)))),
+                    .background(Brush.linearGradient(listOf(c.accentFill, lerp(c.accentFill, c.card, 0.25f)))),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Filled.Dns, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
+                Icon(Icons.Filled.Dns, contentDescription = null, tint = c.onAccentFill, modifier = Modifier.size(28.dp))
             }
             Spacer(Modifier.height(12.dp))
             Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -217,13 +218,14 @@ private fun FloatingDrawer(
                 icon = { Icon(tab.icon, contentDescription = null) },
                 badge = badge?.let { { Text(it, style = MaterialTheme.typography.labelMedium) } },
                 colors = NavigationDrawerItemDefaults.colors(
-                    selectedContainerColor = c.accent,
-                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedTextColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedBadgeColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedContainerColor = c.accentFill,
+                    selectedIconColor = c.onAccentFill,
+                    selectedTextColor = c.onAccentFill,
+                    selectedBadgeColor = c.onAccentFill,
                     unselectedContainerColor = Color.Transparent,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    unselectedBadgeColor = c.accent,
+                    unselectedTextColor = c.text,
+                    unselectedBadgeColor = c.accentText,
                 ),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),

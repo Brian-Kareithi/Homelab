@@ -115,18 +115,19 @@ private fun UrlTextField(label: String, value: String, onChange: (String) -> Uni
                 Text("Testing…", style = MaterialTheme.typography.labelSmall)
             }
             is TestState.Done -> {
-                val status = HomelabTheme.colors.status
+                val c = HomelabTheme.colors
+                val status = c.status
                 Spacer(Modifier.height(4.dp))
                 when (val r = test.result) {
                     is ConnectionTestResult.Success -> Text(
                         "Connected · ${r.groups} groups, ${r.services} services",
                         style = MaterialTheme.typography.labelSmall,
-                        color = status.ok,
+                        color = c.textOn(status.ok, c.card),
                     )
                     is ConnectionTestResult.Failure -> Text(
                         "Failed · ${r.message}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = status.error,
+                        color = c.textOn(status.error, c.card),
                     )
                 }
             }
