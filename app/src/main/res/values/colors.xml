@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="slate_900">#FF0F172A</color>
+    <color name="slate_800">#FF1E293B</color>
+    <color name="slate_700">#FF334155</color>
+    <color name="cyan_500">#FF06B6D4</color>
+    <color name="ic_launcher_background">#FF0F172A</color>
+</resources>

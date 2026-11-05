@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Homepage runs over plain HTTP on private addresses (LAN + Tailscale), so cleartext
+    must be allowed. The explicit domain entries document the known hosts; the
+    base-config keeps user-entered custom URLs working too.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.100.35</domain>
+        <domain includeSubdomains="false">100.100.173.21</domain>
+        <domain includeSubdomains="true">dreezy0</domain>
+    </domain-config>
+</network-security-config>

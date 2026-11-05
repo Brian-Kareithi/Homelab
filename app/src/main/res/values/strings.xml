@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Homelab</string>
+    <string name="channel_docker">Container status</string>
+    <string name="channel_docker_desc">Alerts when a Docker container stops running</string>
+    <string name="channel_server">Server reachability</string>
+    <string name="channel_server_desc">Alerts when the Homepage server goes offline or comes back</string>
+    <string name="channel_torrents">Completed torrents</string>
+    <string name="channel_torrents_desc">Alerts when a qBittorrent download completes</string>
+    <string name="channel_requests">New requests</string>
+    <string name="channel_requests_desc">Alerts when a new Seerr request is waiting for approval</string>
+</resources>
