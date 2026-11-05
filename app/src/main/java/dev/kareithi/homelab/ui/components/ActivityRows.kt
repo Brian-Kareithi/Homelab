@@ -93,7 +93,10 @@ fun QueueRow(item: QueueItem, now: Instant, modifier: Modifier = Modifier) {
         Column(Modifier.padding(12.dp)) {
             Text(item.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(2.dp))
-            val eta = Format.parseInstant(item.estimatedCompletion)?.let { Format.relative(it, now) }
+            // A finished item's ETA is in the past and meaningless, so only show it while downloading.
+            val eta = Format.parseInstant(item.estimatedCompletion)
+                ?.takeIf { (item.progress ?: 0f) < 1f }
+                ?.let { Format.relative(it, now) }
             Secondary(
                 listOfNotNull(
                     item.source.takeIf { it.isNotBlank() },
