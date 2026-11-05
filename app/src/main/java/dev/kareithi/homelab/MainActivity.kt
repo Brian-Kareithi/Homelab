@@ -18,7 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.kareithi.homelab.data.settings.ThemeMode
 import dev.kareithi.homelab.ui.HomelabRoot
 import dev.kareithi.homelab.ui.theme.HomelabTheme
-import dev.kareithi.homelab.ui.theme.Slate
+import dev.kareithi.homelab.ui.theme.Palette
 
 class MainActivity : ComponentActivity() {
 
@@ -31,8 +31,8 @@ class MainActivity : ComponentActivity() {
             val settings by store.settings.collectAsStateWithLifecycle(initialValue = null)
             val s = settings
             if (s == null) {
-                // DataStore not read yet: keep the slate window background, no theme flash.
-                Box(Modifier.fillMaxSize().background(Slate.S900))
+                // DataStore not read yet: match the window background, no theme flash.
+                Box(Modifier.fillMaxSize().background(Palette.LavenderMist))
                 return@setContent
             }
             val dark = when (s.theme) {

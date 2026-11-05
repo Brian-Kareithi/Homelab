@@ -1,7 +1,11 @@
 package dev.kareithi.homelab.ui.dashboard
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,10 +32,12 @@ import dev.kareithi.homelab.ui.components.CardShape
 import dev.kareithi.homelab.ui.components.ErrorLine
 import dev.kareithi.homelab.ui.components.HealthPill
 import dev.kareithi.homelab.ui.components.HomelabCard
+import dev.kareithi.homelab.ui.components.PillSkeleton
 import dev.kareithi.homelab.ui.components.ServiceIcon
 import dev.kareithi.homelab.ui.components.ShimmerStatRow
 import dev.kareithi.homelab.ui.components.StatRow
 import dev.kareithi.homelab.ui.components.StatusPill
+import dev.kareithi.homelab.ui.theme.HomelabTheme
 
 /** How many stat blocks a widget type shows, for the loading shimmer. */
 private fun expectedStats(type: String?): Int = when (type?.lowercase()) {
@@ -64,9 +70,17 @@ fun ServiceCard(
                 },
             ),
     ) {
-        Column(Modifier.padding(12.dp)) {
+        Column(Modifier.padding(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                ServiceIcon(service.icon, service.name, size = 40.dp, baseUrl = baseUrl)
+                Box(
+                    Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(HomelabTheme.colors.statBlock),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ServiceIcon(service.icon, service.name, size = 30.dp, baseUrl = baseUrl)
+                }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Text(service.name, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -81,7 +95,10 @@ fun ServiceCard(
                     }
                 }
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    docker?.let { StatusPill(it.label, it.level) }
+                    when {
+                        docker != null -> StatusPill(docker.label, docker.level)
+                        service.hasDocker -> PillSkeleton(width = 64.dp)
+                    }
                     health?.let { HealthPill(it) }
                 }
             }
@@ -89,11 +106,11 @@ fun ServiceCard(
                 val data = widget.data
                 when {
                     data != null && data.stats.isNotEmpty() -> {
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(12.dp))
                         StatRow(data.stats)
                     }
                     data == null && widget.loading -> {
-                        Spacer(Modifier.height(10.dp))
+                        Spacer(Modifier.height(12.dp))
                         ShimmerStatRow(expectedStats(service.widget?.type))
                     }
                 }

@@ -58,6 +58,7 @@ import dev.kareithi.homelab.ui.components.HomelabCard
 import dev.kareithi.homelab.ui.components.HomelabScaffold
 import dev.kareithi.homelab.ui.components.NavAction
 import dev.kareithi.homelab.ui.components.SectionTitle
+import dev.kareithi.homelab.ui.components.SettingsCardSkeleton
 import dev.kareithi.homelab.ui.dashboard.DashboardViewModel
 
 @Composable
@@ -76,7 +77,16 @@ fun SettingsScreen(
         onNavAction = onOpenMenu,
     ) { padding ->
         if (settings == null) {
-            Box(Modifier.fillMaxSize())
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .padding(top = padding.calculateTopPadding(), start = 16.dp, end = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                SettingsCardSkeleton(lines = 4)
+                SettingsCardSkeleton(lines = 2)
+                SettingsCardSkeleton(lines = 3)
+            }
             return@HomelabScaffold
         }
         LazyColumn(

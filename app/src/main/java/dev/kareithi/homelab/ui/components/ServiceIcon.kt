@@ -179,7 +179,7 @@ private fun RemoteIcon(url: String, name: String, size: Dp, tint: Color?) {
         contentScale = ContentScale.Fit,
         colorFilter = tint?.let { ColorFilter.tint(it) },
         modifier = Modifier.size(size),
-        loading = { Box(Modifier.size(size)) },
+        loading = { SkeletonBlock(Modifier.size(size), RoundedCornerShape(size * 0.25f)) },
         error = { LetterTile(name, size) },
     )
 }

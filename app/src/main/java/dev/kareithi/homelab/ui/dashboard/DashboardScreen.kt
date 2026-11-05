@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -30,21 +31,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.kareithi.homelab.data.settings.Defaults
 import dev.kareithi.homelab.domain.ServiceGroupUi
+import dev.kareithi.homelab.ui.components.AccentBar
 import dev.kareithi.homelab.ui.components.AutoRefreshEffect
+import dev.kareithi.homelab.ui.components.CountChip
+import dev.kareithi.homelab.ui.components.GroupHeaderSkeleton
+import dev.kareithi.homelab.ui.components.ResourcesSkeleton
+import dev.kareithi.homelab.ui.components.ServiceCardSkeleton
 import dev.kareithi.homelab.ui.components.ConnectionIndicator
-import dev.kareithi.homelab.ui.components.HomelabCard
 import dev.kareithi.homelab.ui.components.HomelabScaffold
 import dev.kareithi.homelab.ui.components.NavAction
 import dev.kareithi.homelab.ui.components.OfflineBanner
 import dev.kareithi.homelab.ui.components.ResourcesStrip
-import dev.kareithi.homelab.ui.components.ShimmerStatRow
 import dev.kareithi.homelab.ui.components.rememberNow
 import dev.kareithi.homelab.ui.components.rememberUrlOpener
-import dev.kareithi.homelab.ui.components.shimmer
 import dev.kareithi.homelab.ui.settings.SettingsViewModel
+import dev.kareithi.homelab.ui.theme.HomelabTheme
+import java.util.Locale
 
 /** 1 column on phones in portrait, 2 in landscape / on tablets (width ≥ 600dp). */
 @Composable
@@ -102,12 +108,14 @@ fun DashboardScreen(
                         OfflineBanner(state.lastUpdated, state.offlineMessage, now)
                     }
                 }
-                state.resources?.takeIf { !it.isEmpty }?.let { res ->
-                    fullWidth("resources") { ResourcesStrip(res) }
+                val res = state.resources
+                when {
+                    res != null && !res.isEmpty -> fullWidth("resources") { ResourcesStrip(res) }
+                    res == null && !state.initialAttemptDone -> fullWidth("resources:skeleton") { ResourcesSkeleton() }
                 }
 
                 if (!state.hasData) {
-                    loadingPlaceholders(columns)
+                    dashboardSkeleton(columns)
                 }
 
                 state.groups.forEachIndexed { gi, group ->
@@ -141,22 +149,12 @@ private fun LazyGridScope.fullWidth(key: String, content: @Composable () -> Unit
     item(key = key, span = { GridItemSpan(maxLineSpan) }) { content() }
 }
 
-private fun LazyGridScope.loadingPlaceholders(columns: Int) {
-    items(count = 4 * columns, key = { "placeholder:$it" }) {
-        HomelabCard(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.width(40.dp).height(40.dp).clip(MaterialTheme.shapes.small).shimmer())
-                    Spacer(Modifier.width(12.dp))
-                    Column {
-                        Box(Modifier.width(120.dp).height(14.dp).clip(MaterialTheme.shapes.small).shimmer())
-                        Spacer(Modifier.height(6.dp))
-                        Box(Modifier.width(80.dp).height(10.dp).clip(MaterialTheme.shapes.small).shimmer())
-                    }
-                }
-                Spacer(Modifier.height(10.dp))
-                ShimmerStatRow(3)
-            }
+/** Skeleton that mirrors the real layout: two groups of service cards. */
+private fun LazyGridScope.dashboardSkeleton(columns: Int) {
+    listOf(4, 2).forEachIndexed { g, cards ->
+        item(key = "skeleton:group:$g", span = { GridItemSpan(maxLineSpan) }) { GroupHeaderSkeleton() }
+        items(count = cards * columns, key = { "skeleton:$g:$it" }) { i ->
+            ServiceCardSkeleton(stats = if (i % 3 == 2) 0 else 3 + i % 2)
         }
     }
 }
@@ -164,29 +162,31 @@ private fun LazyGridScope.loadingPlaceholders(columns: Int) {
 @Composable
 private fun GroupHeader(group: ServiceGroupUi, collapsed: Boolean, onToggle: () -> Unit) {
     val rotation by animateFloatAsState(if (collapsed) -90f else 0f, label = "chevron")
+    val c = HomelabTheme.colors
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(MaterialTheme.shapes.small)
+            .padding(top = 12.dp)
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onToggle)
-            .padding(top = 10.dp, bottom = 2.dp),
+            .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        AccentBar()
+        Spacer(Modifier.width(10.dp))
         Text(
-            group.name,
-            style = MaterialTheme.typography.titleSmall,
+            group.name.uppercase(Locale.getDefault()),
+            style = MaterialTheme.typography.labelLarge,
+            letterSpacing = 1.4.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f),
         )
-        Text(
-            "${group.services.size}",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        CountChip("${group.services.size}")
+        Spacer(Modifier.width(4.dp))
         Icon(
             Icons.Filled.ExpandMore,
             contentDescription = if (collapsed) "Expand" else "Collapse",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = c.accent,
             modifier = Modifier.rotate(rotation),
         )
     }

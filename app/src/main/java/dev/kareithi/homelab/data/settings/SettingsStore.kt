@@ -44,16 +44,16 @@ object Defaults {
     const val MAGIC_DNS_URL = "http://dreezy0:3000"
     const val TITLE = "Kareithi's Homelab"
     const val DESCRIPTION = "Movies, TV, Music & Downloads"
-    const val ACCENT: Long = 0xFF06B6D4
+    const val ACCENT: Long = 0xFF4392F1
     const val REFRESH_SECONDS = 15
     val REFRESH_OPTIONS = listOf(5, 15, 30, 60, 0) // 0 = off
     val ACCENT_OPTIONS: List<Long> = listOf(
-        0xFF06B6D4, // cyan
-        0xFF3B82F6, // blue
-        0xFF8B5CF6, // violet
-        0xFF10B981, // emerald
-        0xFFF59E0B, // amber
-        0xFFF43F5E, // rose
+        0xFF4392F1, // Blue Energy
+        0xFFDC493A, // Cinnabar
+        0xFF8A6FDF, // Iris (Lavender Mist hue)
+        0xFF2F9E9A, // Lagoon
+        0xFFE8913A, // Ember
+        0xFF12223A, // Ink
     )
 }
 
@@ -63,7 +63,7 @@ data class AppSettings(
     val tailscaleUrl: String = Defaults.TAILSCALE_URL,
     val customUrl: String = Defaults.MAGIC_DNS_URL,
     val refreshSeconds: Int = Defaults.REFRESH_SECONDS,
-    val theme: ThemeMode = ThemeMode.DARK,
+    val theme: ThemeMode = ThemeMode.LIGHT,
     val accent: Long = Defaults.ACCENT,
     val dynamicColor: Boolean = false,
     val title: String = Defaults.TITLE,
@@ -119,7 +119,7 @@ class SettingsStore(context: Context) {
             tailscaleUrl = p[Keys.TAILSCALE_URL] ?: Defaults.TAILSCALE_URL,
             customUrl = p[Keys.CUSTOM_URL] ?: Defaults.MAGIC_DNS_URL,
             refreshSeconds = p[Keys.REFRESH] ?: Defaults.REFRESH_SECONDS,
-            theme = enumOr(p[Keys.THEME], ThemeMode.DARK),
+            theme = enumOr(p[Keys.THEME], ThemeMode.LIGHT),
             accent = p[Keys.ACCENT] ?: Defaults.ACCENT,
             dynamicColor = p[Keys.DYNAMIC] ?: false,
             title = p[Keys.TITLE]?.takeIf { it.isNotBlank() } ?: Defaults.TITLE,

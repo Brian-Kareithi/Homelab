@@ -1,11 +1,5 @@
 package dev.kareithi.homelab.ui.components
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,31 +14,44 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import dev.kareithi.homelab.domain.HealthCheck
 import dev.kareithi.homelab.domain.Stat
 import dev.kareithi.homelab.domain.StatusLevel
 import dev.kareithi.homelab.ui.theme.HomelabTheme
 import java.util.Locale
 
-val CardShape = RoundedCornerShape(12.dp)
+val CardShape = RoundedCornerShape(18.dp)
+private val BlockShape = RoundedCornerShape(12.dp)
 
-/** Homepage-style card: slate surface, 12dp corners, 1dp border. */
+/**
+ * Soft, accent-tinted shadow in light mode (cards appear to float over the gradient);
+ * flat with a border in dark mode where shadows don't read.
+ */
+@Composable
+fun Modifier.cardShadow(shape: Shape = CardShape, elevation: Dp = 10.dp): Modifier {
+    val c = HomelabTheme.colors
+    return if (c.isDark) this else this.shadow(elevation, shape, clip = false, ambientColor = c.shadow, spotColor = c.shadow)
+}
+
+/** The app's card: Paper surface, 18dp corners, 1dp border, tinted shadow. */
 @Composable
 fun HomelabCard(
     modifier: Modifier = Modifier,
@@ -52,7 +59,8 @@ fun HomelabCard(
 ) {
     val c = HomelabTheme.colors
     Surface(
-        modifier = modifier,
+        // Shadow goes first so callers' clip()/clickable() don't cut it off.
+        modifier = Modifier.cardShadow().then(modifier),
         shape = CardShape,
         color = c.card,
         border = BorderStroke(1.dp, c.cardBorder),
@@ -63,7 +71,7 @@ fun HomelabCard(
 /** Row of 2–4 stat blocks: big number, small label. */
 @Composable
 fun StatRow(stats: List<Stat>, modifier: Modifier = Modifier) {
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         stats.forEach { StatBlock(it, Modifier.weight(1f)) }
     }
 }
@@ -72,22 +80,24 @@ fun StatRow(stats: List<Stat>, modifier: Modifier = Modifier) {
 fun StatBlock(stat: Stat, modifier: Modifier = Modifier) {
     Column(
         modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(BlockShape)
             .background(HomelabTheme.colors.statBlock)
-            .padding(vertical = 8.dp, horizontal = 4.dp),
+            .padding(vertical = 10.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             stat.value,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
         )
+        Spacer(Modifier.height(1.dp))
         Text(
             stat.label.uppercase(Locale.getDefault()),
             style = MaterialTheme.typography.labelSmall,
+            fontSize = 10.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -95,40 +105,25 @@ fun StatBlock(stat: Stat, modifier: Modifier = Modifier) {
     }
 }
 
-/** Placeholder stat row while a widget loads for the first time. */
+/** Skeleton for a stat row while a widget loads for the first time. */
 @Composable
 fun ShimmerStatRow(count: Int = 3, modifier: Modifier = Modifier) {
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         repeat(count) {
-            Box(
+            Column(
                 Modifier
                     .weight(1f)
-                    .height(46.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .shimmer(),
-            )
+                    .clip(BlockShape)
+                    .background(HomelabTheme.colors.statBlock)
+                    .padding(vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                SkeletonLine(width = 34.dp, height = 14.dp)
+                Spacer(Modifier.height(6.dp))
+                SkeletonLine(width = 48.dp, height = 8.dp)
+            }
         }
     }
-}
-
-/** Animated shimmer background. */
-fun Modifier.shimmer(): Modifier = composed {
-    val base = HomelabTheme.colors.statBlock
-    val highlight = if (HomelabTheme.colors.isDark) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.7f)
-    val transition = rememberInfiniteTransition(label = "shimmer")
-    val x by transition.animateFloat(
-        initialValue = -400f,
-        targetValue = 1200f,
-        animationSpec = infiniteRepeatable(tween(1200, easing = LinearEasing), RepeatMode.Restart),
-        label = "shimmerX",
-    )
-    background(base).background(
-        Brush.linearGradient(
-            colors = listOf(Color.Transparent, highlight, Color.Transparent),
-            start = Offset(x, 0f),
-            end = Offset(x + 400f, 200f),
-        ),
-    )
 }
 
 /** Small coloured pill with a dot, e.g. Docker "running". */
@@ -138,13 +133,24 @@ fun StatusPill(text: String, level: StatusLevel, modifier: Modifier = Modifier) 
     Row(
         modifier
             .clip(RoundedCornerShape(50))
-            .background(color.copy(alpha = 0.15f))
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+            .background(color.copy(alpha = 0.13f))
+            .padding(horizontal = 9.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(6.dp).clip(CircleShape).background(color))
-        Spacer(Modifier.width(5.dp))
-        Text(text.lowercase(Locale.getDefault()), style = MaterialTheme.typography.labelSmall, color = color, maxLines = 1)
+        Box(
+            Modifier
+                .size(7.dp)
+                .clip(CircleShape)
+                .background(color),
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(
+            text.lowercase(Locale.getDefault()),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = color,
+            maxLines = 1,
+        )
     }
 }
 
@@ -159,19 +165,51 @@ fun HealthPill(health: HealthCheck, modifier: Modifier = Modifier) {
     StatusPill(text, if (health.up) StatusLevel.OK else StatusLevel.ERROR, modifier)
 }
 
+/** Section label: small accent bar, uppercase tracking, optional trailing value. */
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier, trailing: String? = null) {
-    Row(modifier.fillMaxWidth().padding(top = 12.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        AccentBar()
+        Spacer(Modifier.width(8.dp))
         Text(
-            text,
-            style = MaterialTheme.typography.titleSmall,
+            text.uppercase(Locale.getDefault()),
+            style = MaterialTheme.typography.labelLarge,
+            letterSpacing = 1.2.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f),
         )
-        if (trailing != null) {
-            Text(trailing, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+        if (trailing != null) CountChip(trailing)
     }
+}
+
+@Composable
+fun AccentBar(modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .size(width = 4.dp, height = 14.dp)
+            .clip(RoundedCornerShape(2.dp))
+            .background(HomelabTheme.colors.accent),
+    )
+}
+
+@Composable
+fun CountChip(text: String, modifier: Modifier = Modifier) {
+    val c = HomelabTheme.colors
+    Text(
+        text,
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.SemiBold,
+        color = c.accent,
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .background(c.accentSoft)
+            .padding(horizontal = 10.dp, vertical = 3.dp),
+    )
 }
 
 @Composable
@@ -181,19 +219,23 @@ fun EmptyHint(text: String, modifier: Modifier = Modifier) {
             text,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
         )
     }
 }
 
 @Composable
 fun ErrorLine(text: String, modifier: Modifier = Modifier) {
-    Text(
-        text,
-        style = MaterialTheme.typography.labelSmall,
-        color = HomelabTheme.colors.status.error,
-        maxLines = 2,
-        overflow = TextOverflow.Ellipsis,
-        modifier = modifier,
-    )
+    val red = HomelabTheme.colors.status.error
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Filled.ErrorOutline, contentDescription = null, tint = red, modifier = Modifier.size(14.dp))
+        Spacer(Modifier.width(5.dp))
+        Text(
+            text,
+            style = MaterialTheme.typography.labelSmall,
+            color = red,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
 }

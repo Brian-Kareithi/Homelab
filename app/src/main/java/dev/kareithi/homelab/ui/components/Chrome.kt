@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.kareithi.homelab.domain.ConnectionKind
 import dev.kareithi.homelab.domain.Format
@@ -46,23 +47,26 @@ fun rememberNow(periodMs: Long = 15_000L): Long {
 @Composable
 fun ConnectionIndicator(kind: ConnectionKind?, modifier: Modifier = Modifier) {
     val c = HomelabTheme.colors
+    if (kind == null) {
+        PillSkeleton(modifier, width = 86.dp)
+        return
+    }
     val (color, label) = when (kind) {
         ConnectionKind.LAN -> c.status.lan to "LAN"
         ConnectionKind.TAILSCALE -> c.status.tailscale to "Tailscale"
         ConnectionKind.CUSTOM -> c.accent to "Custom"
         ConnectionKind.OFFLINE -> c.status.error to "Offline"
-        null -> MaterialTheme.colorScheme.onSurfaceVariant to "…"
     }
     Row(
         modifier
             .clip(RoundedCornerShape(50))
             .background(color.copy(alpha = 0.12f))
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .padding(horizontal = 10.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Spacer(Modifier.size(8.dp).clip(CircleShape).background(color))
         Spacer(Modifier.width(6.dp))
-        Text(label, style = MaterialTheme.typography.labelSmall, color = color)
+        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = color)
     }
 }
 
@@ -73,9 +77,9 @@ fun OfflineBanner(lastUpdated: Long?, message: String?, now: Long, modifier: Mod
     Row(
         modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(c.status.warn.copy(alpha = 0.15f))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .clip(RoundedCornerShape(14.dp))
+            .background(c.status.warn.copy(alpha = 0.14f))
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.Filled.CloudOff, contentDescription = null, tint = c.status.warn, modifier = Modifier.size(18.dp))

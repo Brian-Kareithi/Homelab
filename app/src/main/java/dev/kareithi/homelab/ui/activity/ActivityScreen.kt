@@ -18,6 +18,7 @@ import dev.kareithi.homelab.ui.components.AutoRefreshEffect
 import dev.kareithi.homelab.ui.components.ConnectionIndicator
 import dev.kareithi.homelab.ui.components.EmptyHint
 import dev.kareithi.homelab.ui.components.HomelabScaffold
+import dev.kareithi.homelab.ui.components.ListRowSkeleton
 import dev.kareithi.homelab.ui.components.NavAction
 import dev.kareithi.homelab.ui.components.NowPlayingRow
 import dev.kareithi.homelab.ui.components.OfflineBanner
@@ -44,6 +45,9 @@ fun ActivityScreen(vm: DashboardViewModel, onOpenMenu: () -> Unit) {
     val torrents = state.activeTorrents
     val totalDown = torrents.sumOf { it.downloadSpeed }
     val totalUp = torrents.sumOf { it.uploadSpeed }
+    // First load (nothing cached yet): show skeletons shaped like the real rows.
+    val loading = (!state.hasData && !state.initialAttemptDone) ||
+        state.widgets.values.any { it.loading && it.data == null }
 
     HomelabScaffold(
         title = "Activity",
@@ -71,7 +75,9 @@ fun ActivityScreen(vm: DashboardViewModel, onOpenMenu: () -> Unit) {
             }
 
             full("h:playing") { SectionTitle("Now playing", trailing = sessions.size.toString()) }
-            if (sessions.isEmpty()) {
+            if (sessions.isEmpty() && loading) {
+                skeletons("s:playing", 1, progress = true)
+            } else if (sessions.isEmpty()) {
                 full("e:playing") { EmptyHint("Nothing is playing right now.") }
             } else {
                 items(sessions.size, key = { "np:$it" }) { i -> NowPlayingRow(sessions[i]) }
@@ -84,7 +90,9 @@ fun ActivityScreen(vm: DashboardViewModel, onOpenMenu: () -> Unit) {
                     trailing = if (total > queue.size) "${queue.size} of $total" else queue.size.toString(),
                 )
             }
-            if (queue.isEmpty()) {
+            if (queue.isEmpty() && loading) {
+                skeletons("s:queue", 3, progress = true)
+            } else if (queue.isEmpty()) {
                 full("e:queue") { EmptyHint("The Sonarr queue is empty.") }
             } else {
                 items(queue.size, key = { "q:$it" }) { i -> QueueRow(queue[i], now) }
@@ -97,13 +105,19 @@ fun ActivityScreen(vm: DashboardViewModel, onOpenMenu: () -> Unit) {
                     else "↓ ${Format.speed(totalDown)}  ↑ ${Format.speed(totalUp)}",
                 )
             }
-            if (torrents.isEmpty()) {
+            if (torrents.isEmpty() && loading) {
+                skeletons("s:torrents", 3, progress = true)
+            } else if (torrents.isEmpty()) {
                 full("e:torrents") { EmptyHint("No active torrents.") }
             } else {
                 items(torrents.size, key = { "t:$it" }) { i -> TorrentRow(torrents[i]) }
             }
         }
     }
+}
+
+private fun LazyGridScope.skeletons(prefix: String, count: Int, progress: Boolean) {
+    items(count, key = { "$prefix:$it" }) { ListRowSkeleton(leading = false, progress = progress) }
 }
 
 private fun LazyGridScope.full(key: String, content: @Composable () -> Unit) {

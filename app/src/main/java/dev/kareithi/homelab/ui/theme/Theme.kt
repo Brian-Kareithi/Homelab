@@ -10,9 +10,11 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -20,27 +22,36 @@ import androidx.compose.ui.unit.sp
 import dev.kareithi.homelab.data.settings.ThemeMode
 import dev.kareithi.homelab.domain.StatusLevel
 
-/** Homepage's slate palette (Tailwind). */
-object Slate {
-    val S50 = Color(0xFFF8FAFC)
-    val S100 = Color(0xFFF1F5F9)
-    val S200 = Color(0xFFE2E8F0)
-    val S300 = Color(0xFFCBD5E1)
-    val S400 = Color(0xFF94A3B8)
-    val S500 = Color(0xFF64748B)
-    val S600 = Color(0xFF475569)
-    val S700 = Color(0xFF334155)
-    val S800 = Color(0xFF1E293B)
-    val S900 = Color(0xFF0F172A)
+/** The five brand colours, plus the few tones derived from them. */
+object Palette {
+    val BlueEnergy = Color(0xFF4392F1)
+    val LavenderMist = Color(0xFFECE8EF)
+    val Lavender = Color(0xFFE3EBFF)
+    val AliceBlue = Color(0xFFE7F0FF)
+    val Cinnabar = Color(0xFFDC493A)
+
+    // Derived: text inks and the dark-mode navies share Blue Energy's hue (213°).
+    val Ink = Color(0xFF12223A)
+    val InkMuted = Color(0xFF5D6B84)
+    val Paper = Color(0xFFFBFCFF)
+    val PaperBorder = Color(0xFFD9E3F6)
+    val Ember = Color(0xFFE8913A) // between Cinnabar and amber, for warnings
+    val Iris = Color(0xFF8A6FDF) // Lavender Mist's hue (274°), saturated
+
+    val Night = Color(0xFF0B1220)
+    val NightTop = Color(0xFF101C33)
+    val NightCard = Color(0xFF16233A)
+    val NightBorder = Color(0xFF22324F)
+    val NightMuted = Color(0xFF93A3BF)
 }
 
 @Immutable
 data class StatusColors(
-    val ok: Color = Color(0xFF22C55E),
-    val warn: Color = Color(0xFFF59E0B),
-    val error: Color = Color(0xFFEF4444),
-    val lan: Color = Color(0xFF22C55E),
-    val tailscale: Color = Color(0xFF3B82F6),
+    val ok: Color = Palette.BlueEnergy,
+    val warn: Color = Palette.Ember,
+    val error: Color = Palette.Cinnabar,
+    val lan: Color = Palette.BlueEnergy,
+    val tailscale: Color = Palette.Iris,
 ) {
     fun of(level: StatusLevel): Color = when (level) {
         StatusLevel.OK -> ok
@@ -49,101 +60,125 @@ data class StatusColors(
     }
 }
 
-/** Extra tokens that Material's scheme doesn't model directly. */
+/** Tokens Material's scheme doesn't model: card surfaces, background gradient, skeletons. */
 @Immutable
 data class HomelabColors(
     val card: Color,
     val cardBorder: Color,
     val statBlock: Color,
     val accent: Color,
-    val status: StatusColors = StatusColors(),
+    val bgTop: Color,
+    val bgBottom: Color,
+    val skeletonBase: Color,
+    val skeletonHighlight: Color,
+    val shadow: Color,
     val isDark: Boolean,
-)
-
-val LocalHomelabColors = staticCompositionLocalOf {
-    HomelabColors(
-        card = Slate.S800, cardBorder = Slate.S700, statBlock = Slate.S900.copy(alpha = 0.6f),
-        accent = Color(0xFF06B6D4), isDark = true,
-    )
+    val status: StatusColors = StatusColors(),
+) {
+    val accentSoft: Color get() = accent.copy(alpha = if (isDark) 0.18f else 0.12f)
 }
 
-private fun onColorFor(c: Color): Color = if (c.luminance() > 0.45f) Slate.S900 else Color.White
-
-private fun darkScheme(accent: Color): ColorScheme = darkColorScheme(
-    primary = accent,
-    onPrimary = onColorFor(accent),
-    primaryContainer = accent.copy(alpha = 0.25f).compositeOverSlate(Slate.S800),
-    onPrimaryContainer = Color.White,
-    secondary = accent,
-    onSecondary = onColorFor(accent),
-    secondaryContainer = Slate.S700,
-    onSecondaryContainer = Color.White,
-    background = Slate.S900,
-    onBackground = Color.White,
-    surface = Slate.S900,
-    onSurface = Color.White,
-    surfaceVariant = Slate.S800,
-    onSurfaceVariant = Slate.S400,
-    surfaceContainerLowest = Slate.S900,
-    surfaceContainerLow = Slate.S800,
-    surfaceContainer = Slate.S800,
-    surfaceContainerHigh = Slate.S800,
-    surfaceContainerHighest = Slate.S700,
-    outline = Slate.S700,
-    outlineVariant = Slate.S700,
-    error = Color(0xFFF87171),
-    onError = Slate.S900,
+private fun lightTokens(accent: Color) = HomelabColors(
+    card = Palette.Paper,
+    cardBorder = Palette.PaperBorder,
+    statBlock = Palette.Lavender,
+    accent = accent,
+    bgTop = Palette.AliceBlue,
+    bgBottom = Palette.LavenderMist,
+    skeletonBase = Palette.Lavender,
+    skeletonHighlight = Color.White.copy(alpha = 0.85f),
+    shadow = accent.copy(alpha = 0.22f),
+    isDark = false,
 )
+
+private fun darkTokens(accent: Color) = HomelabColors(
+    card = Palette.NightCard,
+    cardBorder = Palette.NightBorder,
+    statBlock = Palette.Night.copy(alpha = 0.7f),
+    accent = accent,
+    bgTop = Palette.NightTop,
+    bgBottom = Palette.Night,
+    skeletonBase = Color(0xFF1D2B45),
+    skeletonHighlight = Palette.AliceBlue.copy(alpha = 0.10f),
+    shadow = Color.Black.copy(alpha = 0.5f),
+    isDark = true,
+)
+
+val LocalHomelabColors = staticCompositionLocalOf { lightTokens(Palette.BlueEnergy) }
+
+private fun onColorFor(c: Color): Color = if (c.luminance() > 0.5f) Palette.Ink else Color.White
 
 private fun lightScheme(accent: Color): ColorScheme = lightColorScheme(
     primary = accent,
     onPrimary = onColorFor(accent),
-    primaryContainer = accent.copy(alpha = 0.18f).compositeOverSlate(Color.White),
-    onPrimaryContainer = Slate.S900,
+    primaryContainer = Palette.Lavender,
+    onPrimaryContainer = Palette.Ink,
     secondary = accent,
     onSecondary = onColorFor(accent),
-    secondaryContainer = Slate.S200,
-    onSecondaryContainer = Slate.S900,
-    background = Slate.S100,
-    onBackground = Slate.S900,
-    surface = Slate.S100,
-    onSurface = Slate.S900,
-    surfaceVariant = Color.White,
-    onSurfaceVariant = Slate.S500,
+    secondaryContainer = Palette.AliceBlue,
+    onSecondaryContainer = Palette.Ink,
+    tertiary = Palette.Cinnabar,
+    onTertiary = Color.White,
+    background = Palette.LavenderMist,
+    onBackground = Palette.Ink,
+    surface = Palette.LavenderMist,
+    onSurface = Palette.Ink,
+    surfaceVariant = Palette.AliceBlue,
+    onSurfaceVariant = Palette.InkMuted,
     surfaceContainerLowest = Color.White,
-    surfaceContainerLow = Color.White,
-    surfaceContainer = Color.White,
-    surfaceContainerHigh = Slate.S50,
-    surfaceContainerHighest = Slate.S200,
-    outline = Slate.S300,
-    outlineVariant = Slate.S200,
-    error = Color(0xFFDC2626),
+    surfaceContainerLow = Palette.Paper,
+    surfaceContainer = Palette.Paper,
+    surfaceContainerHigh = Palette.AliceBlue,
+    surfaceContainerHighest = Palette.Lavender,
+    outline = Palette.PaperBorder,
+    outlineVariant = Palette.PaperBorder,
+    error = Palette.Cinnabar,
     onError = Color.White,
 )
 
-private fun Color.compositeOverSlate(bg: Color): Color {
-    val a = alpha
-    return Color(
-        red = red * a + bg.red * (1 - a),
-        green = green * a + bg.green * (1 - a),
-        blue = blue * a + bg.blue * (1 - a),
-        alpha = 1f,
-    )
-}
+private fun darkScheme(accent: Color): ColorScheme = darkColorScheme(
+    primary = accent,
+    onPrimary = onColorFor(accent),
+    primaryContainer = lerp(Palette.NightCard, accent, 0.3f),
+    onPrimaryContainer = Palette.AliceBlue,
+    secondary = accent,
+    onSecondary = onColorFor(accent),
+    secondaryContainer = Palette.NightBorder,
+    onSecondaryContainer = Palette.AliceBlue,
+    tertiary = Palette.Cinnabar,
+    onTertiary = Color.White,
+    background = Palette.Night,
+    onBackground = Palette.AliceBlue,
+    surface = Palette.Night,
+    onSurface = Palette.AliceBlue,
+    surfaceVariant = Palette.NightCard,
+    onSurfaceVariant = Palette.NightMuted,
+    surfaceContainerLowest = Palette.Night,
+    surfaceContainerLow = Palette.NightCard,
+    surfaceContainer = Palette.NightCard,
+    surfaceContainerHigh = Palette.NightCard,
+    surfaceContainerHighest = Palette.NightBorder,
+    outline = Palette.NightBorder,
+    outlineVariant = Palette.NightBorder,
+    error = Palette.Cinnabar,
+    onError = Color.White,
+)
 
 private val HomelabTypography = Typography().let { t ->
     t.copy(
-        titleLarge = t.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+        headlineSmall = t.headlineSmall.copy(fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp),
+        titleLarge = t.titleLarge.copy(fontWeight = FontWeight.Bold, letterSpacing = (-0.2).sp),
         titleMedium = t.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-        titleSmall = t.titleSmall.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp),
-        labelSmall = t.labelSmall.copy(letterSpacing = 0.3.sp),
+        titleSmall = t.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+        labelLarge = t.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+        labelSmall = t.labelSmall.copy(letterSpacing = 0.6.sp, fontWeight = FontWeight.Medium),
     )
 }
 
 @Composable
 fun HomelabTheme(
-    themeMode: ThemeMode = ThemeMode.DARK,
-    accent: Color = Color(0xFF06B6D4),
+    themeMode: ThemeMode = ThemeMode.LIGHT,
+    accent: Color = Palette.BlueEnergy,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
@@ -159,24 +194,18 @@ fun HomelabTheme(
         dark -> darkScheme(accent)
         else -> lightScheme(accent)
     }
-    val extra = when {
-        useDynamic -> HomelabColors(
+    val tokens = when {
+        useDynamic -> (if (dark) darkTokens(scheme.primary) else lightTokens(scheme.primary)).copy(
             card = scheme.surfaceContainer,
             cardBorder = scheme.outlineVariant,
-            statBlock = scheme.surfaceContainerHighest.copy(alpha = 0.6f),
-            accent = scheme.primary,
-            isDark = dark,
+            statBlock = scheme.surfaceContainerHighest.copy(alpha = 0.7f),
+            bgTop = scheme.surfaceContainerLow,
+            bgBottom = scheme.background,
         )
-        dark -> HomelabColors(
-            card = Slate.S800, cardBorder = Slate.S700, statBlock = Slate.S900.copy(alpha = 0.6f),
-            accent = accent, isDark = true,
-        )
-        else -> HomelabColors(
-            card = Color.White, cardBorder = Slate.S200, statBlock = Slate.S100,
-            accent = accent, isDark = false,
-        )
+        dark -> darkTokens(accent)
+        else -> lightTokens(accent)
     }
-    androidx.compose.runtime.CompositionLocalProvider(LocalHomelabColors provides extra) {
+    CompositionLocalProvider(LocalHomelabColors provides tokens) {
         MaterialTheme(colorScheme = scheme, typography = HomelabTypography, content = content)
     }
 }

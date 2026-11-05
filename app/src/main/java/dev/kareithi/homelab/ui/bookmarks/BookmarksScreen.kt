@@ -30,6 +30,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.kareithi.homelab.domain.BookmarkUi
 import dev.kareithi.homelab.ui.components.CardShape
 import dev.kareithi.homelab.ui.components.EmptyHint
+import dev.kareithi.homelab.ui.components.GroupHeaderSkeleton
+import dev.kareithi.homelab.ui.components.ListRowSkeleton
 import dev.kareithi.homelab.ui.components.HomelabCard
 import dev.kareithi.homelab.ui.components.HomelabScaffold
 import dev.kareithi.homelab.ui.components.NavAction
@@ -39,6 +41,7 @@ import dev.kareithi.homelab.ui.components.ServiceIcon
 import dev.kareithi.homelab.ui.components.rememberUrlOpener
 import dev.kareithi.homelab.ui.dashboard.DashboardViewModel
 import dev.kareithi.homelab.ui.dashboard.rememberColumns
+import dev.kareithi.homelab.ui.theme.HomelabTheme
 
 @Composable
 fun BookmarksScreen(vm: DashboardViewModel, onOpenMenu: () -> Unit) {
@@ -66,12 +69,14 @@ fun BookmarksScreen(vm: DashboardViewModel, onOpenMenu: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
-                if (state.bookmarks.isEmpty()) {
+                if (state.bookmarks.isEmpty() && (state.isRefreshing || !state.initialAttemptDone)) {
+                    repeat(2) { g ->
+                        item(key = "sk:g:$g", span = { GridItemSpan(maxLineSpan) }) { GroupHeaderSkeleton() }
+                        items(3, key = { "sk:$g:$it" }) { ListRowSkeleton() }
+                    }
+                } else if (state.bookmarks.isEmpty()) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
-                        Column {
-                            Spacer(Modifier.padding(4.dp))
-                            EmptyHint(if (state.isRefreshing) "Loading bookmarks…" else "No bookmarks configured in Homepage.")
-                        }
+                        EmptyHint("No bookmarks configured in Homepage.")
                     }
                 }
                 state.bookmarks.forEachIndexed { gi, group ->
@@ -96,9 +101,9 @@ private fun BookmarkRow(b: BookmarkUi, baseUrl: String?, onClick: () -> Unit) {
             .clip(CardShape)
             .clickable(onClick = onClick),
     ) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (b.icon.isNullOrBlank()) LetterTile(b.abbr?.takeIf { it.isNotBlank() } ?: b.name, 36.dp)
-            else ServiceIcon(b.icon, b.name, size = 36.dp, baseUrl = baseUrl)
+        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (b.icon.isNullOrBlank()) LetterTile(b.abbr?.takeIf { it.isNotBlank() } ?: b.name, 40.dp)
+            else ServiceIcon(b.icon, b.name, size = 40.dp, baseUrl = baseUrl)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(b.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -113,7 +118,7 @@ private fun BookmarkRow(b: BookmarkUi, baseUrl: String?, onClick: () -> Unit) {
             Icon(
                 Icons.AutoMirrored.Filled.OpenInNew,
                 contentDescription = "Open",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = HomelabTheme.colors.accent,
             )
         }
     }

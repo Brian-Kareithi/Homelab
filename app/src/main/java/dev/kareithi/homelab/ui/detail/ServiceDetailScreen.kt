@@ -1,6 +1,11 @@
 package dev.kareithi.homelab.ui.detail
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -40,6 +45,8 @@ import dev.kareithi.homelab.ui.components.AutoRefreshEffect
 import dev.kareithi.homelab.ui.components.DetailRowView
 import dev.kareithi.homelab.ui.components.DetailTableHeader
 import dev.kareithi.homelab.ui.components.EmptyHint
+import dev.kareithi.homelab.ui.components.GroupHeaderSkeleton
+import dev.kareithi.homelab.ui.components.ListRowSkeleton
 import dev.kareithi.homelab.ui.components.ErrorLine
 import dev.kareithi.homelab.ui.components.HealthPill
 import dev.kareithi.homelab.ui.components.HomelabCard
@@ -56,6 +63,7 @@ import dev.kareithi.homelab.ui.components.TorrentRow
 import dev.kareithi.homelab.ui.components.rememberNow
 import dev.kareithi.homelab.ui.components.rememberUrlOpener
 import dev.kareithi.homelab.ui.dashboard.DashboardViewModel
+import dev.kareithi.homelab.ui.theme.HomelabTheme
 import java.time.Instant
 import java.util.Locale
 
@@ -107,10 +115,16 @@ fun ServiceDetailScreen(
                     }
                 }
 
-                state.dockerStats[service.key]?.let { stats ->
+                val dockerStats = state.dockerStats[service.key]
+                if (dockerStats != null) {
                     item(key = "docker") {
                         SectionTitle("Container")
-                        DockerStatsCard(service, state.docker[service.key], stats)
+                        DockerStatsCard(service, state.docker[service.key], dockerStats)
+                    }
+                } else if (service.hasDocker && state.isRefreshing) {
+                    item(key = "docker:skeleton") {
+                        SectionTitle("Container")
+                        ShimmerStatRow(4)
                     }
                 }
 
@@ -128,6 +142,11 @@ fun ServiceDetailScreen(
                             ErrorLine(it)
                         }
                     }
+                }
+
+                if (data == null && widget?.loading == true) {
+                    item(key = "sk:title") { GroupHeaderSkeleton() }
+                    items(3, key = { "sk:$it" }) { ListRowSkeleton(leading = false, progress = it == 0) }
                 }
 
                 if (data != null) {
@@ -204,7 +223,15 @@ private fun Header(
 ) {
     HomelabCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            ServiceIcon(service.icon, service.name, size = 72.dp, baseUrl = baseUrl)
+            Box(
+                Modifier
+                    .size(88.dp)
+                    .clip(RoundedCornerShape(26.dp))
+                    .background(HomelabTheme.colors.statBlock),
+                contentAlignment = Alignment.Center,
+            ) {
+                ServiceIcon(service.icon, service.name, size = 56.dp, baseUrl = baseUrl)
+            }
             Spacer(Modifier.height(10.dp))
             Text(service.name, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
             service.description?.let {

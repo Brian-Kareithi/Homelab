@@ -2,7 +2,9 @@ package dev.kareithi.homelab.ui
 
 import android.net.Uri
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -37,6 +39,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
@@ -56,6 +60,8 @@ import dev.kareithi.homelab.data.settings.Defaults
 import dev.kareithi.homelab.ui.activity.ActivityScreen
 import dev.kareithi.homelab.ui.bookmarks.BookmarksScreen
 import dev.kareithi.homelab.ui.components.ConnectionIndicator
+import dev.kareithi.homelab.ui.components.ShimmerHost
+import dev.kareithi.homelab.ui.components.cardShadow
 import dev.kareithi.homelab.ui.components.rememberNow
 import dev.kareithi.homelab.ui.dashboard.DashboardScreen
 import dev.kareithi.homelab.ui.dashboard.DashboardUiState
@@ -64,6 +70,7 @@ import dev.kareithi.homelab.ui.detail.ServiceDetailScreen
 import dev.kareithi.homelab.ui.settings.SettingsScreen
 import dev.kareithi.homelab.ui.settings.SettingsViewModel
 import dev.kareithi.homelab.ui.theme.HomelabTheme
+import dev.kareithi.homelab.ui.theme.Palette
 import dev.kareithi.homelab.domain.Format
 import kotlinx.coroutines.launch
 
@@ -92,11 +99,12 @@ fun HomelabRoot() {
     val openMenu: () -> Unit = { scope.launch { drawerState.open() } }
     BackHandler(enabled = drawerState.isOpen) { scope.launch { drawerState.close() } }
 
+    ShimmerHost {
     ModalNavigationDrawer(
         drawerState = drawerState,
         // Swipe-to-open only on top-level screens so it never fights the detail screen's back gesture.
         gesturesEnabled = onTopLevel || drawerState.isOpen,
-        scrimColor = Color.Black.copy(alpha = 0.55f),
+        scrimColor = Palette.Ink.copy(alpha = 0.45f),
         drawerContent = {
             val state by dashboardVm.state.collectAsStateWithLifecycle()
             val settings by dashboardVm.settings.collectAsStateWithLifecycle()
@@ -136,6 +144,7 @@ fun HomelabRoot() {
             }
         }
     }
+    }
 }
 
 /** Sidebar that floats with a margin, rounded corners and a border, like the top bar. */
@@ -155,13 +164,22 @@ private fun FloatingDrawer(
             .padding(12.dp)
             .width(296.dp)
             .fillMaxHeight()
+            .cardShadow(shape, 20.dp)
             .border(1.dp, c.cardBorder, shape),
         drawerShape = shape,
         drawerContainerColor = c.card,
         windowInsets = WindowInsets(0, 0, 0, 0),
     ) {
         Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 16.dp)) {
-            Icon(Icons.Filled.Dns, contentDescription = null, tint = c.accent, modifier = Modifier.size(36.dp))
+            Box(
+                Modifier
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Brush.linearGradient(listOf(c.accent, c.accent.copy(alpha = 0.7f)))),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Filled.Dns, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
+            }
             Spacer(Modifier.height(12.dp))
             Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
@@ -199,12 +217,15 @@ private fun FloatingDrawer(
                 icon = { Icon(tab.icon, contentDescription = null) },
                 badge = badge?.let { { Text(it, style = MaterialTheme.typography.labelMedium) } },
                 colors = NavigationDrawerItemDefaults.colors(
-                    selectedContainerColor = c.accent.copy(alpha = 0.15f),
-                    selectedIconColor = c.accent,
-                    selectedTextColor = c.accent,
-                    selectedBadgeColor = c.accent,
+                    selectedContainerColor = c.accent,
+                    selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedTextColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedBadgeColor = MaterialTheme.colorScheme.onPrimary,
                     unselectedContainerColor = Color.Transparent,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedBadgeColor = c.accent,
                 ),
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
             )
         }

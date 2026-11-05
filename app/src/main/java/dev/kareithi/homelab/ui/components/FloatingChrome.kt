@@ -24,7 +24,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -59,20 +60,26 @@ fun FloatingTopBar(
 ) {
     val c = HomelabTheme.colors
     Surface(
-        modifier = modifier.fillMaxWidth().height(BarHeight),
+        modifier = modifier.cardShadow(FloatingBarShape, 16.dp).fillMaxWidth().height(BarHeight),
         shape = FloatingBarShape,
-        color = c.card,
+        color = c.card.copy(alpha = 0.96f),
         border = BorderStroke(1.dp, c.cardBorder),
-        shadowElevation = 8.dp,
     ) {
-        Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onNavAction) {
+        Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            FilledTonalIconButton(
+                onClick = onNavAction,
+                shape = RoundedCornerShape(14.dp),
+                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                    containerColor = c.accentSoft,
+                    contentColor = c.accent,
+                ),
+            ) {
                 Icon(
                     if (navAction == NavAction.MENU) Icons.Filled.Menu else Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = if (navAction == NavAction.MENU) "Open menu" else "Back",
                 )
             }
-            Column(Modifier.weight(1f).padding(start = 2.dp)) {
+            Column(Modifier.weight(1f).padding(start = 10.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 subtitle?.let {
                     Text(
@@ -113,9 +120,10 @@ fun HomelabScaffold(
     val barTop = statusTop + 8.dp
     val contentTop = barTop + BarHeight + BarMargin
     val contentPadding = PaddingValues(top = contentTop, bottom = navBottom + 24.dp)
-    val bg = MaterialTheme.colorScheme.background
+    val c = HomelabTheme.colors
+    val bg = c.bgTop
 
-    Box(modifier.fillMaxSize().background(bg)) {
+    Box(modifier.fillMaxSize().background(Brush.verticalGradient(listOf(c.bgTop, c.bgBottom)))) {
         if (onRefresh != null) {
             val state = rememberPullToRefreshState()
             PullToRefreshBox(

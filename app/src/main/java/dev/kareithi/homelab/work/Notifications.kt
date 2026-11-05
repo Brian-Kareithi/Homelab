@@ -55,7 +55,7 @@ object Notifications {
         )
         val notification = NotificationCompat.Builder(context, channelId(kind))
             .setSmallIcon(R.drawable.ic_stat_homelab)
-            .setColor(0xFF06B6D4.toInt())
+            .setColor(0xFF4392F1.toInt())
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
