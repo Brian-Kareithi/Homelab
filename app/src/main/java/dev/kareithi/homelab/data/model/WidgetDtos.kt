@@ -85,9 +85,10 @@ data class RadarrMovieDto(
 data class RadarrMovieItemDto(
     val title: String? = null,
     val year: Int? = null,
-    val hasFile: Boolean = false,
-    val monitored: Boolean = false,
-    val isAvailable: Boolean = true,
+    // Homepage's proxy currently trims `all` to {title, id}; these are null in that case.
+    val hasFile: Boolean? = null,
+    val monitored: Boolean? = null,
+    val isAvailable: Boolean? = null,
 )
 
 @Serializable

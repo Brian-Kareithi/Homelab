@@ -108,6 +108,7 @@ class WidgetMappersTest {
         assertEquals(0.75f, d.queue[0].progress!!, 0.0001f)
         assertEquals("2026-01-01T12:00:00Z", d.queue[0].estimatedCompletion)
         assertNull(d.queue[1].progress)
+        assertEquals(2L, d.queueTotal)
     }
 
     @Test
@@ -125,6 +126,20 @@ class WidgetMappersTest {
         val rows = d.sections.single().rows
         assertEquals(listOf("Alpha", "Zeta"), rows.map { it.title })
         assertEquals("2027 · Not yet released", rows[0].subtitle)
+    }
+
+    @Test
+    fun radarr_trimmedAllListsLibrary() {
+        // What Homepage actually returns today: `all` is trimmed to {title, id}.
+        val d = WidgetMappers.map("radarr", null, mapOf(
+            "movie" to j("""{"wanted":14,"have":19,"missing":18,"all":[{"title":"Project Hail Mary","id":2},{"title":"Avengers: Doomsday","id":3}]}"""),
+            "queue/status" to j("""{"totalCount":3,"count":0,"unknownCount":3}"""),
+        ))
+        assertEquals(mapOf("Wanted" to "14", "Missing" to "18", "Queued" to "3", "Movies" to "19"), stats(d))
+        val section = d.sections.single()
+        assertEquals("Movies in Radarr (2)", section.title)
+        assertEquals(listOf("Avengers: Doomsday", "Project Hail Mary"), section.rows.map { it.title })
+        assertNull(section.rows[0].subtitle)
     }
 
     @Test

@@ -117,6 +117,8 @@ data class WidgetData(
     val stats: List<Stat> = emptyList(),
     val sessions: List<NowPlaying> = emptyList(),
     val queue: List<QueueItem> = emptyList(),
+    /** Total queue size on the server; Homepage's proxy only returns the first page of records. */
+    val queueTotal: Long? = null,
     val torrents: List<TorrentItem> = emptyList(),
     val sections: List<DetailSection> = emptyList(),
     /** Seerr pending-request count, used by notifications. */

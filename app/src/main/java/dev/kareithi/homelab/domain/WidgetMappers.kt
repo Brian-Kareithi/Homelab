@@ -190,24 +190,32 @@ object WidgetMappers {
                 Stat("Series", Format.compact(seriesCount.toLong())),
             ),
             queue = items,
+            queueTotal = q.totalRecords,
         )
     }
 
     fun radarr(movie: JsonElement, queueStatus: JsonElement): WidgetData {
         val m = decode<RadarrMovieDto>(movie)
         val queued = decode<QueueStatusDto>(queueStatus).totalCount
-        val missingMovies = m.all
-            .filter { it.monitored && !it.hasFile }
+        // Only list "missing" when the proxy includes file/monitor flags; otherwise list the library.
+        val hasFlags = m.all.any { it.hasFile != null }
+        val listed = m.all
+            .filter { !hasFlags || (it.monitored == true && it.hasFile == false) }
             .sortedBy { it.title?.lowercase(Locale.ROOT) }
             .map {
                 DetailRow(
                     title = it.title ?: "Unknown",
                     subtitle = listOfNotNull(
                         it.year?.takeIf { y -> y > 0 }?.toString(),
-                        if (it.isAvailable) "Available" else "Not yet released",
-                    ).joinToString(" · "),
+                        when (it.isAvailable) {
+                            true -> "Available"
+                            false -> "Not yet released"
+                            null -> null
+                        },
+                    ).joinToString(" · ").ifBlank { null },
                 )
             }
+        val sectionTitle = if (hasFlags) "Missing movies (${listed.size})" else "Movies in Radarr (${listed.size})"
         return WidgetData(
             stats = listOf(
                 Stat("Wanted", Format.compact(m.wanted)),
@@ -215,8 +223,7 @@ object WidgetMappers {
                 Stat("Queued", Format.compact(queued)),
                 Stat("Movies", Format.compact(m.have)),
             ),
-            sections = if (missingMovies.isEmpty()) emptyList()
-            else listOf(DetailSection("Missing movies (${missingMovies.size})", rows = missingMovies)),
+            sections = if (listed.isEmpty()) emptyList() else listOf(DetailSection(sectionTitle, rows = listed)),
         )
     }
 

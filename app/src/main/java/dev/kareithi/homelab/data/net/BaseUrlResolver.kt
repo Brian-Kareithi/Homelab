@@ -93,7 +93,7 @@ class BaseUrlResolver(
         val c = cached
         val stillValid = c != null && !force && c.signature == s.urlSignature &&
             (s.urlMode != UrlMode.AUTO || System.currentTimeMillis() - cachedAt < AUTO_TTL_MS)
-        if (stillValid && c != null) {
+        if (stillValid) {
             c
         } else {
             val resolved = compute(s)
