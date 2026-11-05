@@ -11,15 +11,33 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import coil3.svg.SvgDecoder
 import dev.kareithi.homelab.di.AppContainer
+import dev.kareithi.homelab.work.HealthCheckWorker
+import dev.kareithi.homelab.work.Notifications
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 class HomelabApp : Application(), SingletonImageLoader.Factory {
 
     lateinit var container: AppContainer
         private set
 
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        Notifications.createChannels(this)
+        // Background checks run only while at least one notification toggle is on.
+        appScope.launch {
+            container.settings.settings
+                .map { it.notifications.isNotEmpty() }
+                .distinctUntilChanged()
+                .collect { HealthCheckWorker.sync(this@HomelabApp, it) }
+        }
     }
 
     /** Coil: PNG + SVG icons, 64 MB disk cache so icons keep working offline after first load. */

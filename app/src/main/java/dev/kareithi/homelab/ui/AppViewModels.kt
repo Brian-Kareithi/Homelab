@@ -12,7 +12,7 @@ import dev.kareithi.homelab.ui.settings.SettingsViewModel
 object AppViewModels {
     val Factory: ViewModelProvider.Factory = viewModelFactory {
         initializer { DashboardViewModel(homelabApp().container) }
-        initializer { SettingsViewModel(homelabApp().container, homelabApp()) }
+        initializer { SettingsViewModel(homelabApp().container) }
     }
 }
 

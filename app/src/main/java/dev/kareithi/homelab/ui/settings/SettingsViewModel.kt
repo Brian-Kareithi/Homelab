@@ -1,6 +1,5 @@
 package dev.kareithi.homelab.ui.settings
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.kareithi.homelab.data.net.ConnectionTestResult
@@ -24,10 +23,7 @@ sealed interface TestState {
     data class Done(val result: ConnectionTestResult) : TestState
 }
 
-class SettingsViewModel(
-    container: AppContainer,
-    @Suppress("unused") private val app: Application,
-) : ViewModel() {
+class SettingsViewModel(container: AppContainer) : ViewModel() {
 
     private val store = container.settings
     private val resolver = container.resolver
