@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,14 +15,9 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,6 +31,8 @@ import dev.kareithi.homelab.domain.BookmarkUi
 import dev.kareithi.homelab.ui.components.CardShape
 import dev.kareithi.homelab.ui.components.EmptyHint
 import dev.kareithi.homelab.ui.components.HomelabCard
+import dev.kareithi.homelab.ui.components.HomelabScaffold
+import dev.kareithi.homelab.ui.components.NavAction
 import dev.kareithi.homelab.ui.components.LetterTile
 import dev.kareithi.homelab.ui.components.SectionTitle
 import dev.kareithi.homelab.ui.components.ServiceIcon
@@ -44,29 +40,28 @@ import dev.kareithi.homelab.ui.components.rememberUrlOpener
 import dev.kareithi.homelab.ui.dashboard.DashboardViewModel
 import dev.kareithi.homelab.ui.dashboard.rememberColumns
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BookmarksScreen(vm: DashboardViewModel) {
+fun BookmarksScreen(vm: DashboardViewModel, onOpenMenu: () -> Unit) {
     val state by vm.state.collectAsStateWithLifecycle()
     val openUrl = rememberUrlOpener()
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            TopAppBar(
-                title = { Text("Bookmarks") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
-            )
-        },
+    HomelabScaffold(
+        title = "Bookmarks",
+        subtitle = "${state.bookmarks.sumOf { it.bookmarks.size }} links",
+        navAction = NavAction.MENU,
+        onNavAction = onOpenMenu,
+        isRefreshing = state.isUserRefreshing,
+        onRefresh = { vm.refresh(userInitiated = true) },
     ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = state.isUserRefreshing,
-            onRefresh = { vm.refresh(userInitiated = true) },
-            modifier = Modifier.fillMaxSize().padding(padding),
-        ) {
+        run {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(rememberColumns()),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = padding.calculateTopPadding(),
+                    bottom = padding.calculateBottomPadding(),
+                ),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxSize(),

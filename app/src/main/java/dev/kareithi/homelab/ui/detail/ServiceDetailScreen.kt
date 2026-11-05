@@ -5,31 +5,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -53,6 +43,8 @@ import dev.kareithi.homelab.ui.components.EmptyHint
 import dev.kareithi.homelab.ui.components.ErrorLine
 import dev.kareithi.homelab.ui.components.HealthPill
 import dev.kareithi.homelab.ui.components.HomelabCard
+import dev.kareithi.homelab.ui.components.HomelabScaffold
+import dev.kareithi.homelab.ui.components.NavAction
 import dev.kareithi.homelab.ui.components.NowPlayingRow
 import dev.kareithi.homelab.ui.components.QueueRow
 import dev.kareithi.homelab.ui.components.SectionTitle
@@ -67,7 +59,6 @@ import dev.kareithi.homelab.ui.dashboard.DashboardViewModel
 import java.time.Instant
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServiceDetailScreen(
     serviceKey: String,
@@ -82,35 +73,31 @@ fun ServiceDetailScreen(
 
     AutoRefreshEffect(settings.refreshSeconds) { vm.autoRefresh() }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(service?.name ?: "Service", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
-            )
-        },
+    HomelabScaffold(
+        title = service?.name ?: "Service",
+        subtitle = service?.group,
+        navAction = NavAction.BACK,
+        onNavAction = onBack,
+        isRefreshing = state.isUserRefreshing,
+        onRefresh = { vm.refresh(userInitiated = true) },
     ) { padding ->
         if (service == null) {
-            Column(Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
+            Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
                 EmptyHint("This service is no longer in Homepage's configuration.")
             }
-            return@Scaffold
+            return@HomelabScaffold
         }
         val widget = state.widgets[service.key]
         val data = widget?.data
 
-        PullToRefreshBox(
-            isRefreshing = state.isUserRefreshing,
-            onRefresh = { vm.refresh(userInitiated = true) },
-            modifier = Modifier.fillMaxSize().padding(padding),
-        ) {
+        run {
             LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = padding.calculateTopPadding(),
+                    bottom = padding.calculateBottomPadding(),
+                ),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
@@ -171,7 +158,6 @@ fun ServiceDetailScreen(
                     data.sections.forEachIndexed { i, section -> detailSection(i, section) }
                 }
 
-                item(key = "bottom") { Spacer(Modifier.windowInsetsPadding(WindowInsets.navigationBars).height(16.dp)) }
             }
         }
     }

@@ -11,9 +11,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,15 +27,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -58,34 +55,38 @@ import dev.kareithi.homelab.data.settings.NotificationKind
 import dev.kareithi.homelab.data.settings.ThemeMode
 import dev.kareithi.homelab.domain.ConnectionKind
 import dev.kareithi.homelab.ui.components.HomelabCard
+import dev.kareithi.homelab.ui.components.HomelabScaffold
+import dev.kareithi.homelab.ui.components.NavAction
 import dev.kareithi.homelab.ui.components.SectionTitle
 import dev.kareithi.homelab.ui.dashboard.DashboardViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     vm: SettingsViewModel,
     dashboardVm: DashboardViewModel,
+    onOpenMenu: () -> Unit,
 ) {
     val settings = vm.settings.collectAsStateWithLifecycle().value
     val tests by vm.tests.collectAsStateWithLifecycle()
     val dash by dashboardVm.state.collectAsState()
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            TopAppBar(
-                title = { Text("Settings") },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
-            )
-        },
+    HomelabScaffold(
+        title = "Settings",
+        navAction = NavAction.MENU,
+        onNavAction = onOpenMenu,
     ) { padding ->
         if (settings == null) {
-            Box(Modifier.fillMaxSize().padding(padding))
-            return@Scaffold
+            Box(Modifier.fillMaxSize())
+            return@HomelabScaffold
         }
         LazyColumn(
-            Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+                top = padding.calculateTopPadding() - 12.dp,
+                bottom = padding.calculateBottomPadding(),
+            ),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             item {

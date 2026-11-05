@@ -80,7 +80,7 @@ fun OfflineBanner(lastUpdated: Long?, message: String?, now: Long, modifier: Mod
     ) {
         Icon(Icons.Filled.CloudOff, contentDescription = null, tint = c.status.warn, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(10.dp))
-        val updated = lastUpdated?.let { "Last updated ${Format.relative(it, now)}" } ?: "No data yet"
+        val updated = lastUpdated?.let { "Last updated ${Format.relative(it, maxOf(now, it))}" } ?: "No data yet"
         Text(
             listOfNotNull("Offline", updated, message).joinToString(" · "),
             style = MaterialTheme.typography.labelMedium,
