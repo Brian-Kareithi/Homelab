@@ -63,6 +63,7 @@ fun FloatingTopBar(
         modifier = modifier.cardShadow(FloatingBarShape, 16.dp).fillMaxWidth().height(BarHeight),
         shape = FloatingBarShape,
         color = c.card.copy(alpha = 0.96f),
+        contentColor = MaterialTheme.colorScheme.onSurface,
         border = BorderStroke(1.dp, c.cardBorder),
     ) {
         Row(Modifier.padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
